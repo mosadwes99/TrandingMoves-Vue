@@ -1,0 +1,29 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    font-weight: normal;
+    font-family: "Lato", sans-serif;
+  }
+}
+
+@layer components {
+  .signInput {
+    @apply bg-[#f3f6f9] rounded-lg focus:outline-[#133a5e]  focus:outline-1  focus:outline-none  w-full p-[8px];
+  }
+
+  .submitButton {
+    @apply text-white bg-pramiary active:scale-95 font-sans text-[14px] font-semibold w-full py-[12px] px-[40px]  rounded-lg cursor-pointer flex justify-center;
+  }
+
+  .submitSpinner {
+    @apply w-6 h-6 border-2 rounded-full border-stone-600 border-e-blue-400 ;
+  }
+}
