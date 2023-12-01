@@ -33,8 +33,10 @@ let wishlistCardVlaue = reactive({
 function getWishlistButtonValue() {
   let wishlist = localStorage.getItem("wishlist");
   wishlist = JSON.parse(wishlist);
-  if (wishlist.some((item) => item.id === id)) {
-    return wishlist.filter((item) => item.id == id)[0].value;
+  if (currentUser) {
+    if (wishlist.some((item) => item.id === id)) {
+      return wishlist.filter((item) => item.id == id)[0].value;
+    }
   }
 }
 
@@ -187,7 +189,9 @@ async function getDataFireStore() {
       <div class="flex items-center gap-2">
         <p class="w-1/3 text-sm">Want to watch</p>
 
-        <div class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500">
+        <div
+          class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500"
+        >
           <p
             class="bg-pramiary transition-all duration-300 h-1"
             id
@@ -206,9 +210,11 @@ async function getDataFireStore() {
       <div class="flex items-center gap-2">
         <p class="w-1/3 v">Watching now</p>
 
-        <div class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500">
+        <div
+          class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500"
+        >
           <p
-            class="bg-pramiary transition-all duration-300  h-1"
+            class="bg-pramiary transition-all duration-300 h-1"
             :style="{
               width: `${calculateWidth(wishlistCardVlaue.watchingNow) || 0}%`,
             }"
@@ -224,9 +230,11 @@ async function getDataFireStore() {
       <div class="flex items-center gap-2">
         <p class="w-1/3 text-sm">Complete it later</p>
 
-        <div class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500">
+        <div
+          class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500"
+        >
           <p
-            class="bg-pramiary transition-all duration-300  h-1"
+            class="bg-pramiary transition-all duration-300 h-1"
             :style="{
               width: `${
                 calculateWidth(wishlistCardVlaue.completeItLater) || 0
@@ -244,9 +252,11 @@ async function getDataFireStore() {
       <div class="flex items-center gap-2">
         <p class="w-1/3 text-sm">I don't want to watch it</p>
 
-        <div class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500">
+        <div
+          class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500"
+        >
           <p
-            class="bg-pramiary transition-all duration-300  h-1"
+            class="bg-pramiary transition-all duration-300 h-1"
             :style="{
               width: `${
                 calculateWidth(wishlistCardVlaue.iDonNotWantToWatchIt) || 0
@@ -265,9 +275,11 @@ async function getDataFireStore() {
       <div class="flex items-center gap-2">
         <p class="w-1/3 text-sm">It has been watched</p>
 
-        <div class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500">
+        <div
+          class="w-1/2 h-1 rounded-3xl dark:bg-third bg-gray-200 transition-colors duration-500"
+        >
           <p
-            class="bg-pramiary transition-all duration-300  h-1"
+            class="bg-pramiary transition-all duration-300 h-1"
             :style="{
               width: `${
                 calculateWidth(wishlistCardVlaue.itHasBeenWatched) || 0
