@@ -57,10 +57,10 @@ onMounted(() => {
 
 function loading(e) {
   emit("stopLoading", e);
-  viewWishlist.value = false;
-  setTimeout(() => {
-    viewWishlist.value = true;
-  }, 0);
+  // viewWishlist.value = false;
+  // setTimeout(() => {
+  //   viewWishlist.value = true;
+  // }, 0);
 }
 
 async function getDataFireStore() {
