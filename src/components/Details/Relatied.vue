@@ -1,24 +1,30 @@
 <script setup>
-import { defineProps, defineEmits, onMounted, ref } from "vue";
+import { defineEmits, onMounted, ref } from "vue";
 import GetData from "../../hooks/GetData";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import CuroselButton from "../../Sections/CuroselButton.vue";
 import { FreeMode, Autoplay } from "swiper/modules";
 import { watch } from "vue";
-import { useRouter } from "vue-router";
-
+import { onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 //variables
-let { id, type } = defineProps(["id", "type"]);
 let { content, getData } = GetData();
 let modules = [FreeMode, Autoplay];
 let router = useRouter();
-let emit = defineEmits(["startLoading", "render"]);
+let emit = defineEmits(["startLoading"]);
 let similar = ref("");
-
+let route = useRoute();
 //functions
 onMounted(() => {
   getData(`
-https://api.themoviedb.org/3/${type}/${id}/similar`);
+https://api.themoviedb.org/3/${route.params.type}/${route.params.id}/similar`);
+});
+
+onBeforeRouteUpdate(() => {
+  similar.value = "";
+  setTimeout(() => {
+    getData(`
+https://api.themoviedb.org/3/${route.params.type}/${route.params.id}/similar`);
+  }, 0);
 });
 
 function getSimilar() {
@@ -38,11 +44,17 @@ watch(content, () => {
 function handlemovie(e) {
   router.push({
     name: "details",
-    params: { id: e.id, type: type },
+    params: { id: e.id, type: route.params.type },
   });
-
+  getTop();
   emit("startLoading", true);
-  emit("rerender");
+}
+
+function getTop() {
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
 }
 </script>
 
@@ -75,7 +87,7 @@ function handlemovie(e) {
         <p
           class="dark:text-white text-2xl transition-colors duration-500 py-4 p-2 font-semibold"
         >
-          similar {{ type }}
+          similar {{ route.params.type }}
         </p>
         <CuroselButton />
       </div>

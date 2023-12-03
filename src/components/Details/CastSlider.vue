@@ -4,40 +4,57 @@ import GetData from "../../hooks/GetData";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { FreeMode, Autoplay } from "swiper/modules";
 import { watch } from "vue";
+import { onBeforeRouteUpdate, useRoute } from "vue-router";
 
 //variables
 let { id, type } = defineProps(["id", "type"]);
 let { content, getData } = GetData();
 let modules = [FreeMode, Autoplay];
-let cast = ref("")
+let cast = ref("");
+let route = useRoute();
 
 //functions
 onMounted(() => {
   if ((type = "movie")) {
-    getData(`https://api.themoviedb.org/3/movie/${id}/credits`);
+    getData(`https://api.themoviedb.org/3/movie/${route.params.id}/credits`);
   } else {
-    getData(`https://api.themoviedb.org/3/tv/${id}/aggregate_credits`);
+    getData(
+      `https://api.themoviedb.org/3/tv/${route.params.id}/aggregate_credits`
+    );
   }
 });
 
-function getCast(){
-  let data = []
-  content.value.cast.map((item)=>{
-    if(item.profile_path){
-      data = [...data , item]
+onBeforeRouteUpdate(() => {
+  cast.value = ""
+  setTimeout(() => {
+    if ((type = "movie")) {
+      getData(`https://api.themoviedb.org/3/movie/${route.params.id}/credits`);
+    } else {
+      getData(
+        `https://api.themoviedb.org/3/tv/${route.params.id}/aggregate_credits`
+      );
     }
-  })
-  cast.value = data 
+  } , 0);
+});
+
+function getCast() {
+  let data = [];
+  content.value.cast.map((item) => {
+    if (item.profile_path) {
+      data = [...data, item];
+    }
+  });
+  cast.value = data;
 }
 
-watch(content , ()=>{
-  getCast()
-})
+watch(content, () => {
+  getCast();
+});
 </script>
 
 <template>
-  <div class="w-full lg:p-12">
-    <p class="dark:text-white text-2xl  p-2 font-semibold">Cast</p>
+  <div class="w-full">
+    <p class="dark:text-white text-2xl p-2 font-semibold">Cast</p>
     <Swiper
       :modules="modules"
       :free-mode="true"
@@ -55,7 +72,7 @@ watch(content , ()=>{
           spaceBetween: 40,
         },
         '1024': {
-          slidesPerView: 8.5,
+          slidesPerView: 6.5,
           spaceBetween: 20,
         },
       }"

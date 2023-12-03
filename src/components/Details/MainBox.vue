@@ -8,7 +8,7 @@ import GetVideo from "../../hooks/GetVideo";
 import CastSlider from "./CastSlider.vue";
 import { db } from "../../FireStore/store";
 import Cookie from "universal-cookie";
-
+import { onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import {
   arrayRemove,
   arrayUnion,
@@ -21,9 +21,11 @@ import {
 } from "firebase/firestore";
 
 //variables
+let route = useRoute();
+let router = useRouter();
 let cookie = new Cookie();
 let currentUser = cookie.get("currentUser");
-let { type, id } = defineProps(["type", "id"]);
+// let { type, id } = defineProps(["type", "id"]);
 let { content, getData } = GetData();
 let { rate, getRate } = GetRate();
 let { videoKey, getVideo } = GetVideo();
@@ -33,14 +35,39 @@ let star = `<svg class="w-8" xmlns="http://www.w3.org/2000/svg" height="1em" vie
 let heart = `<svg xmlns="http://www.w3.org/2000/svg" id="heart" :class="" class="fill-white cursor-pointer hover:fill-pramiary transitions-colors duration-200" height="1em" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><style>svg{fill:#ffffff}</style><path d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z"/></svg>`;
 let heartPramiary = `<svg xmlns="http://www.w3.org/2000/svg" id="heart" :class="" class="fill-pramiary cursor-pointer hover:fill-pramiary transitions-colors duration-200" height="1em" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><style>svg{fill:#ffffff}</style><path d="M47.6 300.4L228.3 469.1c7.5 7 17.4 10.9 27.7 10.9s20.2-3.9 27.7-10.9L464.4 300.4c30.4-28.3 47.6-68 47.6-109.5v-5.8c0-69.9-50.5-129.5-119.4-141C347 36.5 300.6 51.4 268 84L256 96 244 84c-32.6-32.6-79-47.5-124.6-39.9C50.5 55.6 0 115.2 0 185.1v5.8c0 41.5 17.2 81.2 47.6 109.5z"/></svg>`;
 let heartColor = ref("");
-let viewWishlist = ref(true);
+let rerender = ref(true);
+let data = reactive({
+  country: null,
+  production: null,
+  language: null,
+});
+let id = route.params.id;
 
 //functions
 onMounted(() => {
-  getData(`https://api.themoviedb.org/3/${type}/${id}`);
+  getData(
+    `https://api.themoviedb.org/3/${route.params.type}/${route.params.id}`
+  );
   getVideo(`
-https://api.themoviedb.org/3/${type}/${id}/videos
+https://api.themoviedb.org/3/${route.params.type}/${route.params.id}/videos
 `);
+});
+
+onBeforeRouteUpdate(() => {
+  setTimeout(() => {
+    getData(
+      `https://api.themoviedb.org/3/${route.params.type}/${route.params.id}`
+    );
+    getVideo(`
+https://api.themoviedb.org/3/${route.params.type}/${route.params.id}/videos
+`);
+    rerender.value = false;
+  }, 0);
+
+  setTimeout(() => {
+    rerender.value = true;
+  }, 1);
+  console.log("update");
 });
 
 watch(content, () => {
@@ -55,12 +82,14 @@ onMounted(() => {
   heartStyle();
 });
 
+watch(content, () => {
+  data.production = content.value.production_companies[0].name;
+  data.language = content.value.spoken_languages[0].english_name;
+  data.country = content.value.production_countries[0].name;
+});
+
 function loading(e) {
   emit("stopLoading", e);
-  // viewWishlist.value = false;
-  // setTimeout(() => {
-  //   viewWishlist.value = true;
-  // }, 0);
 }
 
 async function getDataFireStore() {
@@ -77,21 +106,28 @@ async function getDataFireStore() {
 
 async function handleLike() {
   let likes = localStorage.getItem("likes");
-  emit("stopLoading", true);
   likes = JSON.parse(likes);
+
   if (currentUser) {
+    emit("stopLoading", true);
     let likedRef = doc(db, "users", currentUser.uid);
-    if (likes.some((item) => item === id)) {
+    if (likes.some((item) => item.id === route.params.id)) {
+      let list = likes.filter((like) => like.id == route.params.id)[0];
+      console.log(list);
       await updateDoc(likedRef, {
-        likes: arrayRemove(id),
+        likes: arrayRemove(list),
       });
       getDataFireStore();
     } else {
       await updateDoc(likedRef, {
-        likes: arrayUnion(id),
+        likes: arrayUnion({
+          id: route.params.id,
+          type: route.params.type,
+        }),
       }).then(() => getDataFireStore());
     }
   } else {
+    router.push("/login");
   }
 }
 
@@ -99,17 +135,19 @@ function heartStyle() {
   let likes = [];
   likes = localStorage.getItem("likes");
   likes = JSON.parse(likes);
-  if (likes.some((item) => item === id)) {
-    heartColor.value = true;
-  } else {
-    heartColor.value = false;
+  if (likes) {
+    if (likes.some((item) => item.id === route.params.id)) {
+      heartColor.value = true;
+    } else {
+      heartColor.value = false;
+    }
   }
 }
 </script>
 
 <template>
   <div class="w-full flex lg:flex-row flex-col gap-6">
-    <div v-if="rate" class="lg:w-[40%] w-[95%] mx-auto flex flex-col gap-4">
+    <div v-if="rate" class="lg:w-[45%] w-[95%] mx-auto flex flex-col gap-4">
       <div
         class="w-full flex gap-1 transition-colors duration-500 items-center rounded-md overflow-hidden dark:bg-fourth bg-white shadow-slate-400 dark:shadow-black/50 shadow-lg dark:text-white p-1 px-4 lg:text-lg"
       >
@@ -117,7 +155,7 @@ function heartStyle() {
 
         <p v-html="arrow"></p>
 
-        <p>{{ type }}</p>
+        <p>{{ route.params.type }}</p>
 
         <p v-html="arrow"></p>
 
@@ -157,7 +195,7 @@ function heartStyle() {
                 </p>
               </div>
 
-              <p>{{ content.overview }}</p>
+              <p class="max-h-[21rem] overflow-clip">{{ content.overview }}</p>
             </div>
 
             <div class="py-2 rounded-md flex justify-between items-center">
@@ -215,80 +253,73 @@ function heartStyle() {
       </div>
     </div>
 
-    <div class="lg:w-[60%] w-[95%] mx-auto flex flex-col">
-      <Wishlist :content="content" :id="id" :type="type" @loading="loading" />
-
-      <div
-        class="w-full flex flex-col lg:flex-row flex-wrap justify-between items-start gap-4 py-4 dark:text-white"
-      >
-        <div
-          class="flex gap-[1px] flex-col w-full h-fit lg:w-1/4 bg-pramiary rounded-t-md text-center"
-        >
-          <div class="p-2 text-white">Date</div>
-          <span class="p-2 dark:bg-fourth bg-white">{{
-            content.release_date || "Unknown"
-          }}</span>
-        </div>
+    <div class="lg:w-[55%] w-[95%] mx-auto flex flex-col">
+      <div class="w-full flex lg:flex-row flex-col">
+        <Wishlist v-if="rerender" :content="content" @loading="loading" />
 
         <div
-          class="flex gap-[1px] flex-col w-full h-fit lg:w-1/4 bg-pramiary rounded-t-md text-center"
+          class="w-full flex flex-col lg:flex-row flex-wrap justify-evenly items-start h-fit gap-4 py-4 dark:text-white"
         >
-          <div class="p-2 text-white">Language</div>
-          <span
-            v-for="item in content.spoken_languages"
-            class="p-2 dark:bg-fourth bg-white"
-            >{{ item.english_name || "Unknown" }}</span
+          <div
+            class="flex gap-[1px] flex-col w-full h-fit lg:w-[45%] bg-pramiary rounded-t-md text-center"
           >
-        </div>
+            <div class="p-2 text-white">Date</div>
+            <span class="p-2 dark:bg-fourth bg-white">{{
+              content.release_date || "Unknown"
+            }}</span>
+          </div>
 
-        <div
-          class="flex gap-[1px] flex-col w-full h-fit lg:w-1/4 bg-pramiary rounded-t-md text-center"
-        >
-          <div class="p-2 text-white">Country</div>
-          <span
-            v-for="item in content.production_countries"
-            class="p-2 dark:bg-fourth bg-white"
-            >{{ item.name }}</span
+          <div
+            class="flex gap-[1px] flex-col w-full h-fit lg:w-[45%] bg-pramiary rounded-t-md text-center"
           >
-        </div>
+            <div class="p-2 text-white">Language</div>
+            <span class="p-2 dark:bg-fourth bg-white">{{
+              data.language || "Unknown"
+            }}</span>
+          </div>
 
-        <div
-          class="flex gap-[1px] flex-col w-full h-fit lg:w-1/4 bg-pramiary rounded-t-md text-center"
-        >
-          <div class="p-2 text-white">Production Companies</div>
-          <span
-            v-if="content.production_companies"
-            v-for="item in content.production_companies"
-            class="p-2 dark:bg-fourth bg-white"
-            >{{ item.name }}</span
+          <div
+            class="flex gap-[1px] flex-col w-full h-fit lg:w-[45%] bg-pramiary rounded-t-md text-center"
           >
+            <div class="p-2 text-white">Country</div>
+            <span v-if="content" class="p-2 dark:bg-fourth bg-white">{{
+              data.country || "Unknown"
+            }}</span>
+          </div>
 
-          <span v-else class="p-2 dark:bg-fourth bg-white">Unknown</span>
-        </div>
+          <div
+            class="flex gap-[1px] flex-col w-full h-fit lg:w-[45%] bg-pramiary rounded-t-md text-center"
+          >
+            <div class="p-2 text-white">Production Companies</div>
+            <span class="p-2 dark:bg-fourth bg-white">{{
+              data.production || "Unknown"
+            }}</span>
+          </div>
 
-        <div
-          v-if="type === 'tv'"
-          class="flex gap-[1px] flex-col w-full h-fit lg:w-1/4 bg-pramiary rounded-t-md text-center"
-        >
-          <div class="p-2 text-white">Seasons</div>
-          <span class="p-2 dark:bg-fourth bg-white">{{
-            content.number_of_seasons || "Unknown"
-          }}</span>
-        </div>
+          <div
+            v-if="route.params.type === 'tv'"
+            class="flex gap-[1px] flex-col w-full h-fit lg:w-[45%] bg-pramiary rounded-t-md text-center"
+          >
+            <div class="p-2 text-white">Seasons</div>
+            <span class="p-2 dark:bg-fourth bg-white">{{
+              content.number_of_seasons || "Unknown"
+            }}</span>
+          </div>
 
-        <div
-          v-if="type === 'tv'"
-          class="flex gap-[1px] flex-col w-full h-fit lg:w-1/4 bg-pramiary rounded-t-md text-center"
-        >
-          <div class="p-2 text-white">Episodes</div>
-          <span class="p-2 dark:bg-fourth bg-white">{{
-            content.number_of_episodes || "Unknown"
-          }}</span>
+          <div
+            v-if="route.params.type === 'tv'"
+            class="flex gap-[1px] flex-col w-full h-fit lg:w-[45%] bg-pramiary rounded-t-md text-center"
+          >
+            <div class="p-2 text-white">Episodes</div>
+            <span class="p-2 dark:bg-fourth bg-white">{{
+              content.number_of_episodes || "Unknown"
+            }}</span>
+          </div>
         </div>
       </div>
+      <CastSlider />
     </div>
   </div>
-  <CastSlider :id="id" :type="type" />
 </template>
 
 <style scoped></style>

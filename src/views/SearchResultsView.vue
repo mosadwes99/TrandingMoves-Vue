@@ -62,6 +62,7 @@ watch(content, () => {
 
 function handlePagination(e) {
   pageNumber.value = e;
+  getTop()
 }
 
 function pageNumberStyle(e) {

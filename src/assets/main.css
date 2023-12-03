@@ -10,7 +10,7 @@
     box-sizing: border-box;
     margin: 0;
     font-weight: normal;
-    font-family: "Lato", sans-serif;
+    font-family: "lato";
   }
 }
 
@@ -24,6 +24,7 @@
   }
 
   .submitSpinner {
-    @apply w-6 h-6 border-2 rounded-full border-stone-600 border-e-blue-400 ;
+    @apply w-6 h-6 border-2 rounded-full border-stone-600 border-e-secondary animate-spin ;
   }
 }
+

@@ -11,16 +11,24 @@ import {
   query,
   updateDoc,
   where,
-  deleteDoc,
   addDoc,
 } from "firebase/firestore";
+import {
+  onBeforeRouteLeave,
+  onBeforeRouteUpdate,
+  useRoute,
+  useRouter,
+} from "vue-router";
 
 //variables
+let router = useRouter();
+let rerender = ref(true);
+let route = useRoute();
 let cookie = new Cookie();
 let currentUser = cookie.get("currentUser");
-let { type, id, content } = defineProps(["type", "id"]);
+let { content } = defineProps(["content"]);
 let emit = defineEmits(["loading", "getFirestoreData"]);
-let wishlistValue = ref(getWishlistButtonValue() || "");
+let wishlistValue = ref(getWishlistButtonValue());
 let wishlistCardVlaue = reactive({
   wantToWatch: 0,
   watchingNow: 0,
@@ -34,44 +42,47 @@ function getWishlistButtonValue() {
   let wishlist = localStorage.getItem("wishlist");
   wishlist = JSON.parse(wishlist);
   if (currentUser) {
-    if (wishlist.some((item) => item.id === id)) {
-      return wishlist.filter((item) => item.id == id)[0].value;
+    if (wishlist.some((item) => item.id === route.params.id)) {
+      return wishlist.filter((item) => item.id == route.params.id)[0].value;
+    } else {
+      return "";
     }
   }
 }
 
 async function handleWishlist() {
   let wishlist = localStorage.getItem("wishlist");
-  emit("loading", true);
   wishlist = JSON.parse(wishlist);
   if (currentUser) {
+    emit("loading", true);
     let wishlistQuery = query(
       collection(db, "wishlists"),
       where("userUid", "==", currentUser.uid),
-      where("uid", "==", id)
+      where("uid", "==", route.params.id)
     );
     let userWishlist = doc(db, "users", currentUser.uid);
 
-    if (wishlist.some((item) => item.id === id)) {
-      let list = wishlist.filter((item) => item.id == id)[0];
+    if (wishlist.some((item) => item.id === route.params.id)) {
+      let list = wishlist.filter((item) => item.id == route.params.id)[0];
 
       // if (list.value === wishlistValue.value) {
-      //   await updateDoc(userWishlist, {
-      //     wishlist: arrayRemove(list),
-      //   });
-      //   let querySnapshot = await getDocs(wishlistQuery);
-      //   querySnapshot.forEach((data) => {
-      //     let ref = doc(db, "wishlists", data.id);
-      //     deleteDoc(ref);
-      //   });
+        // await updateDoc(userWishlist, {
+        //   wishlist: arrayRemove(list),
+        // });
+        // let querySnapshot = await getDocs(wishlistQuery);
+        // querySnapshot.forEach((data) => {
+        //   let ref = doc(db, "wishlists", data.id);
+        //   deleteDoc(ref);
+        // });
       // } else {
       await updateDoc(userWishlist, {
         wishlist: arrayRemove(list),
       });
       await updateDoc(userWishlist, {
         wishlist: arrayUnion({
-          id: id,
+          id: route.params.id,
           value: wishlistValue.value,
+          type: route.params.type,
         }),
       });
       let querySnapshot = await getDocs(wishlistQuery);
@@ -87,24 +98,32 @@ async function handleWishlist() {
       if (wishlistValue.value) {
         await addDoc(collection(db, "wishlists"), {
           value: wishlistValue.value,
-          uid: id,
+          uid: route.params.id,
           userUid: currentUser.uid,
         });
         await updateDoc(userWishlist, {
           wishlist: arrayUnion({
-            id: id,
+            id: route.params.id,
             value: wishlistValue.value,
+            type: route.params.type,
           }),
         });
       } else {
         console.log("err");
       }
-      await wishlistCard();
+      wishlistCard();
       getDataFireStore();
     }
   } else {
+    router.push("/login");
   }
 }
+
+onBeforeRouteUpdate(() => {
+  setTimeout(() => {
+    wishlistCard();
+  }, 0);
+});
 
 async function wishlistCard() {
   wishlistCardVlaue.wantToWatch = 0;
@@ -115,7 +134,7 @@ async function wishlistCard() {
   let data = [];
   let wishlistQuery = query(
     collection(db, "wishlists"),
-    where("uid", "==", id)
+    where("uid", "==", route.params.id)
   );
   let querySnapshot = await getDocs(wishlistQuery);
   querySnapshot.forEach((doc) => {
@@ -163,7 +182,7 @@ async function getDataFireStore() {
 </script>
 
 <template>
-  <div class="flex gap-4 flex-col lg:flex-row justify-end w-full">
+  <div v-if="rerender" class="flex gap-4 flex-col justify-start w-full">
     <div class="w-full">
       <label class="px-1 w-fit">
         <span class="text-pramiary label-text -mb-1"
@@ -176,9 +195,13 @@ async function getDataFireStore() {
         class="select select-bordered w-full dark:text-white transition-colors duration-500 dark:bg-fourth"
       >
         <option>Want to watch</option>
+
         <option>Watching now</option>
+
         <option>Complete it later</option>
+
         <option>I don't want to watch it</option>
+
         <option>It has been watched</option>
       </select>
     </div>
@@ -200,6 +223,7 @@ async function getDataFireStore() {
             }"
           ></p>
         </div>
+
         <p
           class="px-4 text-sm text-black/50 dark:text-white/40 transition-colors duration-500"
         >
@@ -220,6 +244,7 @@ async function getDataFireStore() {
             }"
           ></p>
         </div>
+
         <p
           class="px-4 text-sm text-black/50 dark:text-white/40 transition-colors duration-500"
         >
@@ -242,6 +267,7 @@ async function getDataFireStore() {
             }"
           ></p>
         </div>
+
         <p
           class="px-4 text-sm text-black/50 dark:text-white/40 transition-colors duration-500"
         >
