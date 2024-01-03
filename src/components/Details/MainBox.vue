@@ -53,6 +53,7 @@ https://api.themoviedb.org/3/${route.params.type}/${route.params.id}/videos
 `);
 });
 
+
 onBeforeRouteUpdate(() => {
   setTimeout(() => {
     getData(
@@ -67,7 +68,6 @@ https://api.themoviedb.org/3/${route.params.type}/${route.params.id}/videos
   setTimeout(() => {
     rerender.value = true;
   }, 1);
-  console.log("update");
 });
 
 watch(content, () => {
@@ -76,6 +76,7 @@ watch(content, () => {
 
 watch(content, () => {
   emit("stopLoading", false);
+  console.log(content.value)
 });
 
 onMounted(() => {
@@ -147,7 +148,7 @@ function heartStyle() {
 
 <template>
   <div class="w-full flex lg:flex-row flex-col gap-6">
-    <div v-if="rate" class="lg:w-[45%] w-[95%] mx-auto flex flex-col gap-4">
+    <div v-if="content" class="lg:w-[45%] w-[95%] mx-auto flex flex-col gap-4">
       <div
         class="w-full flex gap-1 transition-colors duration-500 items-center rounded-md overflow-hidden dark:bg-fourth bg-white shadow-slate-400 dark:shadow-black/50 shadow-lg dark:text-white p-1 px-4 lg:text-lg"
       >
@@ -205,7 +206,7 @@ function heartStyle() {
               >
 
               <p class="text-2xl flex gap-[2px] items-center">
-                {{ rate.rating }}<span class="text-sm"></span>
+                <span class="text-sm"></span>
 
                 <span v-html="star"></span>
               </p>

@@ -10,7 +10,6 @@ let router = useRouter();
 let view = ref(false);
 let isLoading = ref(false);
 let getData = reactive({
-  userName: "",
   email: "",
   password: "",
   confirmPassword: "",
@@ -19,7 +18,6 @@ let getData = reactive({
 let dataError = reactive({
   email: null,
   password: null,
-  userName: null,
   confirmPassword: null,
 });
 
@@ -47,18 +45,6 @@ function changeData(e) {
       dataError.password = "Password must be at least 6 characters long";
     }
   }
-  //handdle userName data
-  else if (e.target.name == "userName") {
-    if (getData.userName.length > 2 && getData.userName.length < 20) {
-      dataError.userName = "";
-    } else if (getData.userName.length == 0) {
-      dataError.userName = "userName is required";
-    } else if (getData.userName.length <= 2) {
-      dataError.userName = "It must be at least 3 characters long";
-    } else {
-      dataError.userName = "It must be less than 20 characters long";
-    }
-  }
   //handdle confirmPassword data
   else {
     if (getData.confirmPassword == getData.password) {
@@ -70,7 +56,7 @@ function changeData(e) {
 }
 
 async function dataRquired(e) {
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     if (dataError[e.target[i].name] == null) {
       dataError[e.target[i].name] = `${e.target[i].name} is required`;
     }
@@ -81,7 +67,6 @@ async function dataRquired(e) {
 async function updateData() {
   await setDoc(doc(db, "users", auth.currentUser.uid), {
     uid: auth.currentUser.uid,
-    userName: getData.userName,
     likes: [],
     wishlist: [],
   });
@@ -89,7 +74,6 @@ async function updateData() {
 
 async function submitForm(e) {
   if (
-    dataError.userName == "" &&
     dataError.email == "" &&
     dataError.password == "" &&
     dataError.confirmPassword == ""
@@ -143,22 +127,6 @@ onMounted(() => {
           <form @submit.prevent="submitForm">
             <div className="w-full mb-2">
               <div className="text-lg mb-3 font-semibold  text-white/50">
-                <label htmlFor="userName">
-                  User name <span className="text-red-600">*</span>
-                </label>
-              </div>
-              <input
-                name="userName"
-                @input="changeData"
-                type="text"
-                className="signInput"
-                v-model="getData.userName"
-              />
-              <span className="text-red-500">{{ dataError.userName }}</span>
-            </div>
-
-            <div className="w-full mb-2">
-              <div className="text-lg mb-3 font-semibold  text-white/50">
                 <label htmlFor="email">
                   Email <span className="text-red-600">*</span>
                 </label>
@@ -174,7 +142,7 @@ onMounted(() => {
               <span className="text-red-500">{{ dataError.email }}</span>
             </div>
 
-            <div className="w-full mb-[28px]">
+            <div className="w-full mb-2">
               <div className="text-lg mb-3 font-semibold text-white/50">
                 <label htmlFor="password">
                   Password <span className="text-red-600">*</span>
@@ -191,7 +159,7 @@ onMounted(() => {
               <span className="text-red-500">{{ dataError.password }}</span>
             </div>
 
-            <div className="w-full mb-[28px]">
+            <div className="w-full mb-[4rem]">
               <div className="text-lg mb-3 font-semibold text-white/50">
                 <label htmlFor="confirmPassword">
                   Confirm Password <span className="text-red-600">*</span>

@@ -68,7 +68,7 @@ function handleDate(e) {
 </script>
 
 <template>
-  <div class="w-full lg:p-12 py-2">
+  <div class="w-full lg:p-12 py-2" v-if="content.results">
     <Swiper
       :modules="modules"
       :free-mode="true"
@@ -130,7 +130,7 @@ function handleDate(e) {
           @click="handlemovie(item)"
         >
           <img
-            class="hover:scale-110 transition duration-300 rounded-lg"
+            class="hover:scale-110 transition duration-300 aspect-[2/3] object-cover rounded-lg"
             :src="`https://image.tmdb.org/t/p/original${
               item.profile_path || item.poster_path
             } `"

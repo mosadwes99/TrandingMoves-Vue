@@ -10,7 +10,7 @@ export default {
 };
 </script>
 <template>
-  <div class="w-full">
+  <div class="w-full min-h-screen">
     <MainSwiper />
     <Sliders
       url="https://api.themoviedb.org/3/movie/now_playing"

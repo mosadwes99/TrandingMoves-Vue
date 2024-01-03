@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted, onUnmounted, reactive, ref } from "vue";
+import { useLoginStore } from "../stores/LogStore";
+import { onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { auth, db } from "../FireStore/store";
 import { signInWithEmailAndPassword } from "firebase/auth";
@@ -9,6 +10,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 //variables
 let router = useRouter();
 let cookie = new Cookies();
+let { setLogin } = useLoginStore();
 
 let isLoading = ref(false);
 let view = ref(false);
@@ -73,6 +75,7 @@ async function submitForm(e) {
     isLoading.value = true;
     try {
       await signInWithEmailAndPassword(auth, getData.email, getData.password);
+      setLogin();
       getDataFireStore();
       router.push({ name: "home" });
     } catch (error) {

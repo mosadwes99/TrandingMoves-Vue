@@ -18,6 +18,7 @@ let getTrandingMovies = () => {
     } catch (err) {
       error.value = err;
     }
+    // console.log(content.value);
   }
   return { content, getData, error };
 };

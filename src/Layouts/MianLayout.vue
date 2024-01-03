@@ -1,6 +1,7 @@
 <script setup>
 import { RouterView } from "vue-router";
 import Nav from "../components/Nav/Nav.vue";
+import Footer from "../Sections/Footer.vue";
 import { ref } from "vue";
 
 let scroll = ref(0);
@@ -37,8 +38,12 @@ window.addEventListener("scroll", getScroll);
           alt=""
         />
       </div>
+
       <Nav @darkToggle="darkToggle" />
+
       <RouterView />
+
+      <Footer/>
     </div>
   </div>
 </template>
